@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:i_system/screen/dashboard.dart';
+import 'package:roundcheckbox/roundcheckbox.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   runApp(MyApp());
 }
@@ -43,10 +46,25 @@ class _LoginPageState extends State<LoginPage> {
       setState(() {
         _apiResponse = responseData['message'];
       });
+       final token = responseData['data']['token']['name'];
+         SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString('token', token);
+      Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => DashboardPage()),
+    );
     } else {
       setState(() {
         _apiResponse = 'Login failed';
       });
+        AwesomeDialog(
+         width: 500,  
+        context: context,
+        dialogType: DialogType.ERROR,
+        title: 'Login Failed',
+        desc: 'Incorrect username or password.',
+        btnOkOnPress: () {},
+      )..show();
     }
   }
 
@@ -56,7 +74,7 @@ class _LoginPageState extends State<LoginPage> {
       body: Row(
         children: [
           Expanded(
-            flex: 2,
+            flex: 3,
             child: Align(
               alignment: Alignment.bottomCenter, // Align the circle to the bottom
               child: Container(
@@ -180,37 +198,30 @@ class _LoginPageState extends State<LoginPage> {
                       obscureText: !_showPassword,
                     ),
                     SizedBox(height: 16),
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _rememberMe = !_rememberMe;
-                            });
-                          },
-                          child: Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.grey,
-                                width: 2,
-                              ),
-                            ),
-                            child: _rememberMe
-                                ? Icon(
-                                    Icons.check,
-                                    size: 16,
-                                    color: Colors.grey,
-                                  )
-                                : null,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Text('Remember me'),
-                      ],
-                    ),
+                    Center(
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Checkbox(
+        checkColor: Colors.white,
+        fillColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.error)) {
+            return Colors.red;
+          }
+          return Colors.green;
+        }),
+        value: _rememberMe,
+        shape: CircleBorder(),
+        onChanged: (bool? value) {
+          setState(() {
+            _rememberMe = value!;
+          });
+        },
+      ),
+      Text('Remember me'),
+    ],
+  ),
+),
                     SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _loginUser,
